@@ -3,7 +3,7 @@ package ldap
 import (
 	"strings"
 
-	"github.com/hashicorp/vault/helper/policyutil"
+	"github.com/hashicorp/vault/helper/policies"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -95,7 +95,7 @@ func (b *backend) pathGroupWrite(
 	req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 	// Store it
 	entry, err := logical.StorageEntryJSON("group/"+d.Get("name").(string), &GroupEntry{
-		Policies: policyutil.ParsePolicies(d.Get("policies").(string)),
+		Policies: policies.ParsePolicies(d.Get("policies").(string)),
 	})
 	if err != nil {
 		return nil, err

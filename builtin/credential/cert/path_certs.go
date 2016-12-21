@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/vault/helper/policyutil"
+	"github.com/hashicorp/vault/helper/policies"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -138,7 +138,7 @@ func (b *backend) pathCertWrite(
 	name := strings.ToLower(d.Get("name").(string))
 	certificate := d.Get("certificate").(string)
 	displayName := d.Get("display_name").(string)
-	policies := policyutil.ParsePolicies(d.Get("policies").(string))
+	policies := policies.ParsePolicies(d.Get("policies").(string))
 
 	// Default the display name to the certificate name if not given
 	if displayName == "" {

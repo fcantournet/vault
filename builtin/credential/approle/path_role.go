@@ -9,7 +9,7 @@ import (
 	"github.com/fatih/structs"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/vault/helper/cidrutil"
-	"github.com/hashicorp/vault/helper/policyutil"
+	"github.com/hashicorp/vault/helper/policies"
 	"github.com/hashicorp/vault/helper/strutil"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
@@ -739,9 +739,9 @@ func (b *backend) pathRoleCreateUpdate(req *logical.Request, data *framework.Fie
 	}
 
 	if policiesRaw, ok := data.GetOk("policies"); ok {
-		role.Policies = policyutil.ParsePolicies(policiesRaw.(string))
+		role.Policies = policies.ParsePolicies(policiesRaw.(string))
 	} else if req.Operation == logical.CreateOperation {
-		role.Policies = policyutil.ParsePolicies(data.Get("policies").(string))
+		role.Policies = policies.ParsePolicies(data.Get("policies").(string))
 	}
 
 	periodRaw, ok := data.GetOk("period")
@@ -1278,7 +1278,7 @@ func (b *backend) pathRolePoliciesUpdate(req *logical.Request, data *framework.F
 	lock.Lock()
 	defer lock.Unlock()
 
-	role.Policies = policyutil.ParsePolicies(policies)
+	role.Policies = policies.ParsePolicies(policies)
 
 	return nil, b.setRoleEntry(req.Storage, roleName, role, "")
 }
@@ -1321,7 +1321,7 @@ func (b *backend) pathRolePoliciesDelete(req *logical.Request, data *framework.F
 	lock.Lock()
 	defer lock.Unlock()
 
-	role.Policies = policyutil.ParsePolicies(data.GetDefaultOrZero("policies").(string))
+	role.Policies = policies.ParsePolicies(data.GetDefaultOrZero("policies").(string))
 
 	return nil, b.setRoleEntry(req.Storage, roleName, role, "")
 }

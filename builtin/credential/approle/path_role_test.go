@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/vault/helper/policyutil"
+	"github.com/hashicorp/vault/helper/policies"
 	"github.com/hashicorp/vault/logical"
 	"github.com/mitchellh/mapstructure"
 )
@@ -512,7 +512,7 @@ func TestAppRole_RoleList(t *testing.T) {
 
 	actual := resp.Data["keys"].([]string)
 	expected := []string{"role1", "role2", "role3", "role4", "role5"}
-	if !policyutil.EquivalentPolicies(actual, expected) {
+	if !policies.EquivalentPolicies(actual, expected) {
 		t.Fatalf("bad: listed roles: expected:%s\nactual:%s", expected, actual)
 	}
 }
@@ -776,7 +776,7 @@ func TestAppRole_RoleCRUD(t *testing.T) {
 
 	expectedPolicies := []string{"default"}
 	actualPolicies := resp.Data["policies"].([]string)
-	if !policyutil.EquivalentPolicies(expectedPolicies, actualPolicies) {
+	if !policies.EquivalentPolicies(expectedPolicies, actualPolicies) {
 		t.Fatalf("bad: policies: expected:%s actual:%s", expectedPolicies, actualPolicies)
 	}
 

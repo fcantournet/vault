@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/vault/helper/certutil"
-	"github.com/hashicorp/vault/helper/policyutil"
+	"github.com/hashicorp/vault/helper/policies"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -129,7 +129,7 @@ func (b *backend) pathLoginRenew(
 		return nil, nil
 	}
 
-	if !policyutil.EquivalentPolicies(cert.Policies, req.Auth.Policies) {
+	if !policies.EquivalentPolicies(cert.Policies, req.Auth.Policies) {
 		return nil, fmt.Errorf("policies have changed, not renewing")
 	}
 

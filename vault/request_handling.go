@@ -9,7 +9,7 @@ import (
 	"github.com/armon/go-metrics"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/vault/helper/jsonutil"
-	"github.com/hashicorp/vault/helper/policyutil"
+	"github.com/hashicorp/vault/helper/policies"
 	"github.com/hashicorp/vault/helper/strutil"
 	"github.com/hashicorp/vault/logical"
 )
@@ -400,7 +400,7 @@ func (c *Core) handleLoginRequest(req *logical.Request) (*logical.Response, *log
 			TTL:          auth.TTL,
 		}
 
-		te.Policies = policyutil.SanitizePolicies(te.Policies, true)
+		te.Policies = policies.SanitizePolicies(te.Policies, true)
 
 		// Prevent internal policies from being assigned to tokens
 		for _, policy := range te.Policies {

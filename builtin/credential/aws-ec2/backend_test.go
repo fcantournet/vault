@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/vault/helper/policyutil"
+	"github.com/hashicorp/vault/helper/policies"
 	"github.com/hashicorp/vault/logical"
 	logicaltest "github.com/hashicorp/vault/logical/testing"
 )
@@ -84,7 +84,7 @@ func TestBackend_CreateParseVerifyRoleTag(t *testing.T) {
 		rTag2.Nonce != nonce ||
 		rTag2.Role != "abcd-123" ||
 		rTag2.MaxTTL != 200000000000 || // 200s
-		!policyutil.EquivalentPolicies(rTag2.Policies, []string{"p", "q", "r"}) ||
+		!policies.EquivalentPolicies(rTag2.Policies, []string{"p", "q", "r"}) ||
 		len(rTag2.HMAC) == 0 {
 		t.Fatalf("parsed role tag is invalid")
 	}
@@ -726,7 +726,7 @@ func TestBackend_pathRole(t *testing.T) {
 	if resp == nil || resp.IsError() {
 		t.Fatal("failed to read the role entry")
 	}
-	if !policyutil.EquivalentPolicies(strings.Split(data["policies"].(string), ","), resp.Data["policies"].([]string)) {
+	if !policies.EquivalentPolicies(strings.Split(data["policies"].(string), ","), resp.Data["policies"].([]string)) {
 		t.Fatalf("bad: policies: expected: %#v\ngot: %#v\n", data, resp.Data)
 	}
 
@@ -881,7 +881,7 @@ func TestBackend_parseAndVerifyRoleTagValue(t *testing.T) {
 		t.Fatalf("failed to parse role tag")
 	}
 	if rTag.Version != "v1" ||
-		!policyutil.EquivalentPolicies(rTag.Policies, []string{"p", "q", "r", "s"}) ||
+		!policies.EquivalentPolicies(rTag.Policies, []string{"p", "q", "r", "s"}) ||
 		rTag.Role != "abcd-123" {
 		t.Fatalf("bad: parsed role tag contains incorrect values. Got: %#v\n", rTag)
 	}

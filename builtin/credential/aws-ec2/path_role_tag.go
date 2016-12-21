@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/vault/helper/policyutil"
+	"github.com/hashicorp/vault/helper/policies"
 	"github.com/hashicorp/vault/helper/strutil"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
@@ -109,7 +109,7 @@ func (b *backend) pathRoleTagUpdate(
 	var policies []string
 	policiesStr, ok := data.GetOk("policies")
 	if ok {
-		policies = policyutil.ParsePolicies(policiesStr.(string))
+		policies = policies.ParsePolicies(policiesStr.(string))
 	}
 	if !strutil.StrListSubset(roleEntry.Policies, policies) {
 		resp.AddWarning("Policies on the tag are not a subset of the policies set on the role. Login will not be allowed with this tag unless the role policies are updated.")
@@ -405,7 +405,7 @@ func (rTag1 *roleTag) Equal(rTag2 *roleTag) bool {
 		rTag2 != nil &&
 		rTag1.Version == rTag2.Version &&
 		rTag1.Nonce == rTag2.Nonce &&
-		policyutil.EquivalentPolicies(rTag1.Policies, rTag2.Policies) &&
+		policies.EquivalentPolicies(rTag1.Policies, rTag2.Policies) &&
 		rTag1.MaxTTL == rTag2.MaxTTL &&
 		rTag1.Role == rTag2.Role &&
 		rTag1.HMAC == rTag2.HMAC &&

@@ -7,7 +7,7 @@ import (
 
 	"github.com/fatih/structs"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/vault/helper/policyutil"
+	"github.com/hashicorp/vault/helper/policies"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -327,7 +327,7 @@ func (b *backend) pathRoleCreateUpdate(
 
 	policiesStr, ok := data.GetOk("policies")
 	if ok {
-		roleEntry.Policies = policyutil.ParsePolicies(policiesStr.(string))
+		roleEntry.Policies = policies.ParsePolicies(policiesStr.(string))
 	} else if req.Operation == logical.CreateOperation {
 		roleEntry.Policies = []string{"default"}
 	}

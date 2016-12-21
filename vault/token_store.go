@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/vault/helper/duration"
 	"github.com/hashicorp/vault/helper/jsonutil"
 	"github.com/hashicorp/vault/helper/locksutil"
-	"github.com/hashicorp/vault/helper/policyutil"
+	"github.com/hashicorp/vault/helper/policies"
 	"github.com/hashicorp/vault/helper/salt"
 	"github.com/hashicorp/vault/helper/strutil"
 	"github.com/hashicorp/vault/logical"
@@ -665,7 +665,7 @@ func (ts *TokenStore) create(entry *TokenEntry) error {
 		entry.ID = entryUUID
 	}
 
-	entry.Policies = policyutil.SanitizePolicies(entry.Policies, policyutil.DoNotAddDefaultPolicy)
+	entry.Policies = policies.SanitizePolicies(entry.Policies, policies.DoNotAddDefaultPolicy)
 
 	err := ts.createAccessor(entry)
 	if err != nil {
@@ -1446,7 +1446,7 @@ func (ts *TokenStore) handleCreateCommon(
 
 		// Start with passed-in policies as a baseline, if they exist
 		if len(data.Policies) > 0 {
-			finalPolicies = policyutil.SanitizePolicies(data.Policies, localAddDefault)
+			finalPolicies = policies.SanitizePolicies(data.Policies, localAddDefault)
 		}
 
 		var sanitizedRolePolicies []string
@@ -1458,7 +1458,7 @@ func (ts *TokenStore) handleCreateCommon(
 			// Note that if "default" is already in allowed, and also in
 			// disallowed, this will still result in an error later since this
 			// doesn't strip out default
-			sanitizedRolePolicies = policyutil.SanitizePolicies(role.AllowedPolicies, localAddDefault)
+			sanitizedRolePolicies = policies.SanitizePolicies(role.AllowedPolicies, localAddDefault)
 
 			if len(finalPolicies) == 0 {
 				finalPolicies = sanitizedRolePolicies
@@ -1471,12 +1471,12 @@ func (ts *TokenStore) handleCreateCommon(
 			// Check against parent policies, or assign parent policies. As
 			// this is a role, add default unless explicitly disabled.
 			if len(finalPolicies) == 0 {
-				finalPolicies = policyutil.SanitizePolicies(parent.Policies, localAddDefault)
+				finalPolicies = policies.SanitizePolicies(parent.Policies, localAddDefault)
 			} else {
 				// If we added default based on the fact that this is using a
 				// role, we need to add it here too to ensure that the subset
 				// matching works.
-				sanitizedParentPolicies := policyutil.SanitizePolicies(parent.Policies, localAddDefault)
+				sanitizedParentPolicies := policies.SanitizePolicies(parent.Policies, localAddDefault)
 				if !strutil.StrListSubset(sanitizedParentPolicies, finalPolicies) {
 					return logical.ErrorResponse("child policies must be subset of parent when role contains no allowed_policies"), logical.ErrInvalidRequest
 				}
@@ -1485,7 +1485,7 @@ func (ts *TokenStore) handleCreateCommon(
 
 		if len(role.DisallowedPolicies) > 0 {
 			// We don't add the default here because we only want to disallow it if it's explicitly set
-			sanitizedRolePolicies = policyutil.SanitizePolicies(role.DisallowedPolicies, policyutil.DoNotAddDefaultPolicy)
+			sanitizedRolePolicies = policies.SanitizePolicies(role.DisallowedPolicies, policies.DoNotAddDefaultPolicy)
 
 			for _, finalPolicy := range finalPolicies {
 				if strutil.StrListContains(sanitizedRolePolicies, finalPolicy) {
@@ -1499,7 +1499,7 @@ func (ts *TokenStore) handleCreateCommon(
 	// No policies specified, inherit parent
 	case len(data.Policies) == 0:
 		// Only inherit "default" if the parent already has it, so don't touch addDefault here
-		data.Policies = policyutil.SanitizePolicies(parent.Policies, policyutil.DoNotAddDefaultPolicy)
+		data.Policies = policies.SanitizePolicies(parent.Policies, policies.DoNotAddDefaultPolicy)
 
 	// When a role is not in use or does not specify allowed/disallowed, only
 	// permit policies to be a subset unless the client has root or sudo
@@ -1507,8 +1507,8 @@ func (ts *TokenStore) handleCreateCommon(
 	// the client specified for it not to be added.
 	case !isSudo:
 		// Sanitize passed-in and parent policies before comparison
-		sanitizedInputPolicies := policyutil.SanitizePolicies(data.Policies, policyutil.DoNotAddDefaultPolicy)
-		sanitizedParentPolicies := policyutil.SanitizePolicies(parent.Policies, policyutil.DoNotAddDefaultPolicy)
+		sanitizedInputPolicies := policies.SanitizePolicies(data.Policies, policies.DoNotAddDefaultPolicy)
+		sanitizedParentPolicies := policies.SanitizePolicies(parent.Policies, policies.DoNotAddDefaultPolicy)
 
 		if !strutil.StrListSubset(sanitizedParentPolicies, sanitizedInputPolicies) {
 			return logical.ErrorResponse("child policies must be subset of parent"), logical.ErrInvalidRequest
@@ -1527,7 +1527,7 @@ func (ts *TokenStore) handleCreateCommon(
 		addDefault = !data.NoDefaultPolicy
 	}
 
-	te.Policies = policyutil.SanitizePolicies(data.Policies, addDefault)
+	te.Policies = policies.SanitizePolicies(data.Policies, addDefault)
 
 	// Yes, this is a little inefficient to do it like this, but meh
 	if data.NoDefaultPolicy {
@@ -2211,16 +2211,20 @@ func (ts *TokenStore) tokenStoreRoleCreateUpdate(
 
 	allowedPoliciesStr, ok := data.GetOk("allowed_policies")
 	if ok {
-		entry.AllowedPolicies = policyutil.SanitizePolicies(strings.Split(allowedPoliciesStr.(string), ","), policyutil.DoNotAddDefaultPolicy)
+		entry.AllowedPolicies = policies.SanitizePolicies(strings.Split(allowedPoliciesStr.(string), ","), policies.DoNotAddDefaultPolicy)
 	} else if req.Operation == logical.CreateOperation {
-		entry.AllowedPolicies = policyutil.SanitizePolicies(strings.Split(data.Get("allowed_policies").(string), ","), policyutil.DoNotAddDefaultPolicy)
+		entry.AllowedPolicies = policies.SanitizePolicies(strings.Split(data.Get("allowed_policies").(string), ","), policies.DoNotAddDefaultPolicy)
 	}
 
 	disallowedPoliciesStr, ok := data.GetOk("disallowed_policies")
 	if ok {
-		entry.DisallowedPolicies = policyutil.SanitizePolicies(strings.Split(disallowedPoliciesStr.(string), ","), policyutil.DoNotAddDefaultPolicy)
+		disallowedPolicies := []string{}
+		for i, p := range strings.Split(disallowedPoliciesStr.(string), ",") {
+			if p == "root"
+		}
+		entry.DisallowedPolicies = policies.SanitizePolicies(strings.Split(disallowedPoliciesStr.(string), ","), policies.DoNotAddDefaultPolicy)
 	} else if req.Operation == logical.CreateOperation {
-		entry.DisallowedPolicies = policyutil.SanitizePolicies(strings.Split(data.Get("disallowed_policies").(string), ","), policyutil.DoNotAddDefaultPolicy)
+		entry.DisallowedPolicies = policies.SanitizePolicies(strings.Split(data.Get("disallowed_policies").(string), ","), policies.DoNotAddDefaultPolicy)
 	}
 
 	// Store it

@@ -3,7 +3,7 @@ package userpass
 import (
 	"fmt"
 
-	"github.com/hashicorp/vault/helper/policyutil"
+	"github.com/hashicorp/vault/helper/policies"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
@@ -44,7 +44,7 @@ func (b *backend) pathUserPoliciesUpdate(
 		return nil, fmt.Errorf("username does not exist")
 	}
 
-	userEntry.Policies = policyutil.ParsePolicies(d.Get("policies").(string))
+	userEntry.Policies = policies.ParsePolicies(d.Get("policies").(string))
 
 	return nil, b.setUser(req.Storage, username, userEntry)
 }
